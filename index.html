@@ -164,11 +164,23 @@ function spin(){
     requestAnimationFrame(animate);
 }
 
-function showResult(){
-    const degrees = (startAngle * 180 / Math.PI) % 360;
-    const index = Math.floor((360 - degrees) / (360/products.length)) % products.length;
-    resultBox.innerText = "🎉 Você ganhou: " + products[index] + " 🎉";
-    resultBox.style.display="block";
+function mostrarResultado() {
+    const tamanho = produtos.length;
+    const anguloPorSetor = 360 / tamanho;
+
+    const grausNormalizados = (anguloAtual % 360 + 360) % 360;
+
+    const grausCorrigidos = (360 - grausNormalizados + 90) % 360;
+
+    const indice = Math.floor(grausCorrigidos / anguloPorSetor);
+
+    resultadoBox.innerHTML =
+        "🎉 PARABÉNS!<br>Você ganhou:<br><span>" +
+        produtos[indice] +
+        "</span>";
+
+    overlay.style.display = "flex";
+}
 }
 
 logoSpin.addEventListener("click", spin);
