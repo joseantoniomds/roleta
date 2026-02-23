@@ -6,187 +6,172 @@
 <title>Roleta de Brindes</title>
 
 <style>
-* {
-    box-sizing: border-box;
+body{
+    margin:0;
+    padding:0;
+    background:#0d3b78; /* azul parecido com sua arte */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, Helvetica, sans-serif;
+    overflow:hidden;
 }
 
-body {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    padding: 20px;
+.result-box{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -250%);
+    background:#ffd000;
+    color:#0d3b78;
+    padding:20px 40px;
+    border-radius:15px;
+    font-size:24px;
+    font-weight:bold;
+    box-shadow:0 0 25px rgba(255,208,0,0.8);
+    display:none;
+    text-align:center;
+    z-index:5;
 }
 
-#container {
-    width: 100%;
-    max-width: 500px;
-    text-align: center;
-    position: relative;
+.logo-container{
+    position:absolute;
+    z-index:4;
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    background:white; /* agora branco */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    box-shadow:0 0 25px rgba(0,0,0,0.3);
 }
 
-canvas {
-    width: 100%;
-    height: auto;
+.logo-container img{
+    width:80%;
+    height:auto;
 }
 
-#seta {
-    width: 0;
-    height: 0;
-    border-left: 18px solid transparent;
-    border-right: 18px solid transparent;
-    border-bottom: 35px solid #000;
-    margin: 0 auto;
+.logo-container::after{
+    content:"";
+    position:absolute;
+    bottom:-18px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:15px solid transparent;
+    border-right:15px solid transparent;
+    border-top:25px solid white; /* seta branca */
 }
 
-button {
-    margin-top: 25px;
-    padding: 16px;
-    width: 100%;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    background: #ff4d4d;
-    color: white;
-    border-radius: 12px;
-}
-
-button:active {
-    transform: scale(0.97);
-}
-
-#resultadoBox {
-    margin-top: 25px;
-    padding: 20px;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    font-size: 18px;
-    font-weight: bold;
-    display: none;
-    animation: aparecer 0.5s ease;
-}
-
-@keyframes aparecer {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+canvas{
+    width:90vw;
+    max-width:500px;
+    height:90vw;
+    max-height:500px;
 }
 </style>
 </head>
 <body>
 
-<div id="container">
-    <div id="seta"></div>
-    <canvas id="roleta"></canvas>
-    <button onclick="girar()">GIRAR</button>
-    <div id="resultadoBox"></div>
+<div class="result-box" id="resultBox"></div>
+
+<div class="logo-container" id="logoSpin">
+    <img src="logo.png" alt="Logo">
 </div>
 
+<canvas id="wheel"></canvas>
+
 <script>
-const canvas = document.getElementById("roleta");
+const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
-const resultadoBox = document.getElementById("resultadoBox");
 
-const tamanhoCanvas = 500;
-canvas.width = tamanhoCanvas;
-canvas.height = tamanhoCanvas;
+const logoSpin = document.getElementById("logoSpin");
+const resultBox = document.getElementById("resultBox");
 
-const produtos = [
-    "Produto 1",
-    "Produto 2",
-    "Produto 3",
-    "Produto 4",
-    "Produto 5",
-    "Produto 6",
-    "Produto 7",
-    "Produto 8",
-    "Produto 9",
-    "Produto 10",
-    "Produto 11"
+canvas.width = 500;
+canvas.height = 500;
+
+const products = [
+"Produto 1","Produto 2","Produto 3","Produto 4","Produto 5",
+"Produto 6","Produto 7","Produto 8","Produto 9","Produto 10","Produto 11"
 ];
 
-const cores = [
-    "#FF5733","#33FF57","#3357FF","#FF33A8","#A833FF",
-    "#33FFF5","#FF8C33","#8CFF33","#FF3333","#33A8FF","#FFC300"
+const colors = [
+"#ff4757","#1e90ff","#2ed573","#ffa502","#eccc68",
+"#70a1ff","#ff6b81","#5352ed","#26de81","#fd79a8","#00d2d3"
 ];
 
-let anguloAtual = 0;
-let girando = false;
+const arc = 2 * Math.PI / products.length;
+let startAngle = 0;
+let spinning = false;
 
-function desenharRoleta() {
-    const tamanho = produtos.length;
-    const angulo = (2 * Math.PI) / tamanho;
-
-    for (let i = 0; i < tamanho; i++) {
+function drawWheel(){
+    for(let i=0;i<products.length;i++){
+        const angle = startAngle + i * arc;
         ctx.beginPath();
-        ctx.moveTo(250, 250);
-        ctx.arc(250, 250, 250, i * angulo, (i + 1) * angulo);
-        ctx.fillStyle = cores[i % cores.length];
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(250,250);
+        ctx.arc(250,250,250,angle,angle+arc);
+        ctx.lineTo(250,250);
         ctx.fill();
+
         ctx.save();
-        ctx.translate(250, 250);
-        ctx.rotate(i * angulo + angulo / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 16px Arial";
-        ctx.fillText(produtos[i], 230, 10);
+        ctx.fillStyle="#fff";
+        ctx.translate(
+            250 + Math.cos(angle + arc/2) * 150,
+            250 + Math.sin(angle + arc/2) * 150
+        );
+        ctx.rotate(angle + arc/2 + Math.PI/2);
+        ctx.textAlign="center";
+        ctx.font="bold 14px Arial";
+        ctx.fillText(products[i],0,0);
         ctx.restore();
     }
 }
 
-function girar() {
-    if (girando) return;
-    girando = true;
-    resultadoBox.style.display = "none";
+drawWheel();
 
-    const tempo = 4000;
-    const inicio = performance.now();
-    const rotacaoExtra = Math.random() * 2000 + 2000;
+function spin(){
+    if(spinning) return;
+    spinning = true;
+    resultBox.style.display="none";
 
-    function animar(agora) {
-        const decorrido = agora - inicio;
-        const progresso = decorrido / tempo;
+    const spinAngle = Math.random()*2000 + 3000;
+    const duration = 4000;
+    const start = performance.now();
 
-        if (progresso < 1) {
-            anguloAtual = rotacaoExtra * easeOut(progresso);
-            desenharComRotacao();
-            requestAnimationFrame(animar);
+    function animate(now){
+        const progress = now - start;
+        const ease = Math.min(progress/duration,1);
+        const rotation = spinAngle * ease;
+
+        startAngle = rotation * Math.PI/180;
+        ctx.clearRect(0,0,500,500);
+        drawWheel();
+
+        if(progress < duration){
+            requestAnimationFrame(animate);
         } else {
-            girando = false;
-            mostrarResultado();
+            spinning = false;
+            showResult();
         }
     }
 
-    requestAnimationFrame(animar);
+    requestAnimationFrame(animate);
 }
 
-function desenharComRotacao() {
-    ctx.clearRect(0, 0, tamanhoCanvas, tamanhoCanvas);
-    ctx.save();
-    ctx.translate(250, 250);
-    ctx.rotate(anguloAtual * Math.PI / 180);
-    ctx.translate(-250, -250);
-    desenharRoleta();
-    ctx.restore();
+function showResult(){
+    const degrees = (startAngle * 180 / Math.PI) % 360;
+    const index = Math.floor((360 - degrees) / (360/products.length)) % products.length;
+    resultBox.innerText = "🎉 Você ganhou: " + products[index] + " 🎉";
+    resultBox.style.display="block";
 }
 
-function mostrarResultado() {
-    const tamanho = produtos.length;
-    const angulo = 360 / tamanho;
-    const graus = (anguloAtual % 360);
-    const indice = Math.floor((360 - graus) / angulo) % tamanho;
-
-    resultadoBox.innerHTML = "🎉 PARABÉNS!<br>Você ganhou:<br><span style='color:#ff4d4d'>" + produtos[indice] + "</span>";
-    resultadoBox.style.display = "block";
-}
-
-function easeOut(t) {
-    return 1 - Math.pow(1 - t, 3);
-}
-
-desenharRoleta();
+logoSpin.addEventListener("click", spin);
 </script>
 
 </body>
