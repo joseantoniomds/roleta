@@ -11,7 +11,7 @@
 body{
     margin:0;
     font-family:Arial, sans-serif;
-    background:#f4f4f4;
+    background:#ffffff;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -24,13 +24,11 @@ body{
     position:relative;
 }
 
-/* CANVAS */
 canvas{
     width:100%;
     height:auto;
 }
 
-/* CÍRCULO CENTRAL */
 #centro{
     position:absolute;
     top:50%;
@@ -41,14 +39,19 @@ canvas{
     background:white;
     border-radius:50%;
     display:flex;
+    flex-direction:column;
     justify-content:center;
     align-items:center;
     cursor:pointer;
     z-index:20;
-    box-shadow:0 6px 20px rgba(0,0,0,0.25);
+    box-shadow:0 6px 25px rgba(0,0,0,0.15);
+    transition:transform 0.2s ease;
 }
 
-/* SETA INTEGRADA AO CÍRCULO */
+#centro:hover{
+    transform:translate(-50%,-50%) scale(1.05);
+}
+
 #seta{
     position:absolute;
     top:115px;
@@ -65,7 +68,12 @@ canvas{
     width:75%;
 }
 
-/* RESULTADO */
+#centro span{
+    font-size:12px;
+    margin-top:4px;
+    color:#555;
+}
+
 #overlay{
     position:fixed;
     inset:0;
@@ -84,11 +92,12 @@ canvas{
     font-weight:bold;
     text-align:center;
     animation:pop 0.3s ease;
+    max-width:90%;
 }
 
 #resultadoBox span{
-    color:#ff4d4d;
-    font-size:24px;
+    color:#ff3b3b;
+    font-size:22px;
 }
 
 @keyframes pop{
@@ -101,14 +110,13 @@ canvas{
 <body>
 
 <div id="container">
-
     <canvas id="roleta" width="500" height="500"></canvas>
 
     <div id="centro" onclick="girar()">
         <div id="seta"></div>
         <img src="logo.png" alt="Logo">
+        <span>TOQUE PARA GIRAR</span>
     </div>
-
 </div>
 
 <div id="overlay" onclick="fecharResultado()">
@@ -121,28 +129,47 @@ const ctx=canvas.getContext("2d");
 const overlay=document.getElementById("overlay");
 const resultadoBox=document.getElementById("resultadoBox");
 
-const produtos=[
+const produtosCurto=[
+"10% GERAL",
+"10% AUTOMAÇÃO",
+"CÂMERA WIFI",
+"BRINDE",
+"PLUG WEG",
+"10% SONORIZAÇÃO",
+"15% SERVIÇO",
+"30% CÂMERA PTZ",
+"BRINDE"
+];
+
+const produtosCompleto=[
 "GANHOU 10% EM QUALQUER PRODUTO → VIRA 15% SE FECHAR HOJE",
 "GANHOU 10% EM AUTOMAÇÃO",
 "CAMERA DE SEGURANÇA INTERNA WIFI",
 "BRINDE PERSONALIZADO",
 "PLUG WI-FI SMART WEG HOME",
 "GANHOU 10% SONORIZAÇÃO",
-"BRINDE PERSONALIZADO",
 "15% OFF EM SERVIÇO",
-"30% DE DESCONTO NA CAMERA INTERNA PTZ"
+"30% DE DESCONTO NA CAMERA INTERNA PTZ",
+"BRINDE PERSONALIZADO"
 ];
 
 const cores=[
-"#FF5733","#33FF57","#3357FF","#FF33A8","#A833FF",
-"#33FFF5","#FF8C33","#8CFF33","#FF3333","#33A8FF","#FFC300"
+"#1f3c88",
+"#2962ff",
+"#00bcd4",
+"#ff9800",
+"#4caf50",
+"#009688",
+"#8bc34a",
+"#e53935",
+"#3f51b5"
 ];
 
 let anguloAtual=0;
 let girando=false;
 
 function desenharRoleta(){
-    const total=produtos.length;
+    const total=produtosCurto.length;
     const angulo=(2*Math.PI)/total;
 
     for(let i=0;i<total;i++){
@@ -155,10 +182,40 @@ function desenharRoleta(){
         ctx.save();
         ctx.translate(250,250);
         ctx.rotate(i*angulo+angulo/2);
-        ctx.textAlign="right";
+
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
         ctx.fillStyle="#fff";
-        ctx.font="bold 16px Arial";
-        ctx.fillText(produtos[i],230,10);
+        ctx.font="bold 17px Arial";
+
+        const texto = produtosCurto[i];
+        const palavras = texto.split(" ");
+        let linha="";
+        let linhas=[];
+        const maxWidth=140;
+
+        for(let n=0;n<palavras.length;n++){
+            let teste=linha+palavras[n]+" ";
+            if(ctx.measureText(teste).width>maxWidth && n>0){
+                linhas.push(linha);
+                linha=palavras[n]+" ";
+            }else{
+                linha=teste;
+            }
+        }
+        linhas.push(linha);
+
+        const alturaLinha=20;
+        const raioTexto=170;
+
+        for(let j=0;j<linhas.length;j++){
+            ctx.fillText(
+                linhas[j],
+                raioTexto,
+                (j-(linhas.length-1)/2)*alturaLinha
+            );
+        }
+
         ctx.restore();
     }
 }
@@ -199,17 +256,16 @@ function desenharComRotacao(){
 }
 
 function calcularResultadoReal(){
-    const total=produtos.length;
+    const total=produtosCurto.length;
     const anguloPorSetor=360/total;
 
     let graus=(anguloAtual%360+360)%360;
-
     graus=(360-graus+90)%360;
 
     const indice=Math.floor(graus/anguloPorSetor);
 
     resultadoBox.innerHTML=
-    "🎉 PARABÉNS!<br>Você ganhou:<br><span>"+produtos[indice]+"</span>";
+    "🎉 PARABÉNS!<br><br><span>"+produtosCompleto[indice]+"</span>";
 
     overlay.style.display="flex";
 }
