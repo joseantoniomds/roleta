@@ -9,100 +9,100 @@
 *{box-sizing:border-box;}
 
 body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#ffffff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+margin:0;
+font-family:Arial, sans-serif;
+background:#ffffff;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
 
 #container{
-    width:100%;
-    max-width:500px;
-    position:relative;
+width:100%;
+max-width:500px;
+position:relative;
 }
 
 canvas{
-    width:100%;
-    height:auto;
+width:100%;
+height:auto;
 }
 
 #centro{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:130px;
-    height:130px;
-    background:white;
-    border-radius:50%;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    cursor:pointer;
-    z-index:20;
-    box-shadow:0 6px 25px rgba(0,0,0,0.15);
-    transition:transform 0.2s ease;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:130px;
+height:130px;
+background:white;
+border-radius:50%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+cursor:pointer;
+z-index:20;
+box-shadow:0 6px 25px rgba(0,0,0,0.15);
+transition:transform .2s;
 }
 
 #centro:hover{
-    transform:translate(-50%,-50%) scale(1.05);
+transform:translate(-50%,-50%) scale(1.05);
 }
 
 #seta{
-    position:absolute;
-    top:115px;
-    left:50%;
-    transform:translateX(-50%);
-    width:0;
-    height:0;
-    border-left:18px solid transparent;
-    border-right:18px solid transparent;
-    border-top:30px solid white;
+position:absolute;
+top:115px;
+left:50%;
+transform:translateX(-50%);
+width:0;
+height:0;
+border-left:18px solid transparent;
+border-right:18px solid transparent;
+border-top:30px solid white;
 }
 
 #centro img{
-    width:75%;
+width:75%;
 }
 
 #centro span{
-    font-size:12px;
-    margin-top:4px;
-    color:#555;
+font-size:12px;
+margin-top:4px;
+color:#555;
 }
 
 #overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.6);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:100;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:100;
 }
 
 #resultadoBox{
-    background:white;
-    padding:30px;
-    border-radius:20px;
-    font-size:20px;
-    font-weight:bold;
-    text-align:center;
-    animation:pop 0.3s ease;
-    max-width:90%;
+background:white;
+padding:30px;
+border-radius:20px;
+font-size:20px;
+font-weight:bold;
+text-align:center;
+animation:pop .3s ease;
+max-width:90%;
 }
 
 #resultadoBox span{
-    color:#ff3b3b;
-    font-size:22px;
+color:#ff3b3b;
+font-size:22px;
 }
 
 @keyframes pop{
-    from{transform:scale(0.7);opacity:0;}
-    to{transform:scale(1);opacity:1;}
+from{transform:scale(.7);opacity:0;}
+to{transform:scale(1);opacity:1;}
 }
 </style>
 </head>
@@ -110,24 +110,36 @@ canvas{
 <body>
 
 <div id="container">
-    <canvas id="roleta" width="500" height="500"></canvas>
 
-    <div id="centro" onclick="girar()">
-        <div id="seta"></div>
-        <img src="logo.png" alt="Logo">
-        <span>TOQUE PARA GIRAR</span>
-    </div>
+<canvas id="roleta" width="500" height="500"></canvas>
+
+<div id="centro" onclick="girar()">
+<div id="seta"></div>
+<img src="logo.png">
+<span>TOQUE PARA GIRAR</span>
+</div>
+
 </div>
 
 <div id="overlay" onclick="fecharResultado()">
-    <div id="resultadoBox"></div>
+<div id="resultadoBox"></div>
 </div>
 
 <script>
+
 const canvas=document.getElementById("roleta");
 const ctx=canvas.getContext("2d");
 const overlay=document.getElementById("overlay");
 const resultadoBox=document.getElementById("resultadoBox");
+
+/* SONS */
+
+const somRoleta = new Audio("roleta.mp3");
+somRoleta.loop=true;
+
+const somVitoria = new Audio("vitoria.mp3");
+
+/* PRÊMIOS */
 
 const produtosCurto=[
 "10% GERAL",
@@ -165,120 +177,164 @@ const cores=[
 "#3f51b5"
 ];
 
+/* PROBABILIDADES */
+
+const pesos=[
+15,
+10,
+2,
+30,
+8,
+5,
+4,
+1,
+25
+];
+
 let anguloAtual=0;
 let girando=false;
 
+function escolherPremio(){
+
+let soma=pesos.reduce((a,b)=>a+b,0);
+let random=Math.random()*soma;
+let acumulado=0;
+
+for(let i=0;i<pesos.length;i++){
+acumulado+=pesos[i];
+if(random<=acumulado){
+return i;
+}
+}
+
+return 0;
+
+}
+
 function desenharRoleta(){
-    const total=produtosCurto.length;
-    const angulo=(2*Math.PI)/total;
 
-    for(let i=0;i<total;i++){
-        ctx.beginPath();
-        ctx.moveTo(250,250);
-        ctx.arc(250,250,250,i*angulo,(i+1)*angulo);
-        ctx.fillStyle=cores[i%cores.length];
-        ctx.fill();
+const total=produtosCurto.length;
+const angulo=(2*Math.PI)/total;
 
-        ctx.save();
-        ctx.translate(250,250);
-        ctx.rotate(i*angulo+angulo/2);
+for(let i=0;i<total;i++){
 
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-        ctx.fillStyle="#fff";
-        ctx.font="bold 17px Arial";
+ctx.beginPath();
+ctx.moveTo(250,250);
+ctx.arc(250,250,250,i*angulo,(i+1)*angulo);
+ctx.fillStyle=cores[i%cores.length];
+ctx.fill();
 
-        const texto = produtosCurto[i];
-        const palavras = texto.split(" ");
-        let linha="";
-        let linhas=[];
-        const maxWidth=140;
+ctx.save();
+ctx.translate(250,250);
+ctx.rotate(i*angulo+angulo/2);
 
-        for(let n=0;n<palavras.length;n++){
-            let teste=linha+palavras[n]+" ";
-            if(ctx.measureText(teste).width>maxWidth && n>0){
-                linhas.push(linha);
-                linha=palavras[n]+" ";
-            }else{
-                linha=teste;
-            }
-        }
-        linhas.push(linha);
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+ctx.fillStyle="#fff";
+ctx.font="bold 16px Arial";
 
-        const alturaLinha=20;
-        const raioTexto=170;
+ctx.fillText(produtosCurto[i],170,0);
 
-        for(let j=0;j<linhas.length;j++){
-            ctx.fillText(
-                linhas[j],
-                raioTexto,
-                (j-(linhas.length-1)/2)*alturaLinha
-            );
-        }
+ctx.restore();
 
-        ctx.restore();
-    }
+}
+
 }
 
 function girar(){
-    if(girando) return;
-    girando=true;
 
-    const tempo=4000;
-    const inicio=performance.now();
-    const rotacaoExtra=Math.random()*2000+2000;
+if(girando)return;
 
-    function animar(agora){
-        const decorrido=agora-inicio;
-        const progresso=decorrido/tempo;
+girando=true;
 
-        if(progresso<1){
-            anguloAtual=rotacaoExtra*easeOut(progresso);
-            desenharComRotacao();
-            requestAnimationFrame(animar);
-        }else{
-            girando=false;
-            calcularResultadoReal();
-        }
-    }
+/* TOCA SOM DA ROLETA */
 
-    requestAnimationFrame(animar);
+somRoleta.currentTime=0;
+somRoleta.play();
+
+const premio=escolherPremio();
+
+const total=produtosCurto.length;
+const anguloSetor=360/total;
+
+const margem=2;
+const offset=margem+Math.random()*(anguloSetor-(margem*2));
+
+const destino=360-(premio*anguloSetor+offset)+90;
+
+const voltas=360*5;
+const rotacaoFinal=voltas+destino;
+
+const tempo=4000;
+const inicio=performance.now();
+
+function animar(agora){
+
+const progresso=(agora-inicio)/tempo;
+
+if(progresso<1){
+
+anguloAtual=rotacaoFinal*easeOut(progresso);
+desenharComRotacao();
+requestAnimationFrame(animar);
+
+}else{
+
+anguloAtual=rotacaoFinal;
+girando=false;
+
+/* PARA SOM DA ROLETA */
+
+somRoleta.pause();
+
+/* SOM DE VITÓRIA */
+
+somVitoria.play();
+
+mostrarResultado(premio);
+
+}
+
+}
+
+requestAnimationFrame(animar);
+
 }
 
 function desenharComRotacao(){
-    ctx.clearRect(0,0,500,500);
-    ctx.save();
-    ctx.translate(250,250);
-    ctx.rotate(anguloAtual*Math.PI/180);
-    ctx.translate(-250,-250);
-    desenharRoleta();
-    ctx.restore();
+
+ctx.clearRect(0,0,500,500);
+
+ctx.save();
+ctx.translate(250,250);
+ctx.rotate(anguloAtual*Math.PI/180);
+ctx.translate(-250,-250);
+
+desenharRoleta();
+
+ctx.restore();
+
 }
 
-function calcularResultadoReal(){
-    const total=produtosCurto.length;
-    const anguloPorSetor=360/total;
+function mostrarResultado(indice){
 
-    let graus=(anguloAtual%360+360)%360;
-    graus=(360-graus+90)%360;
+resultadoBox.innerHTML=
+"🎉 PARABÉNS!<br><br><span>"+produtosCompleto[indice]+"</span>";
 
-    const indice=Math.floor(graus/anguloPorSetor);
+overlay.style.display="flex";
 
-    resultadoBox.innerHTML=
-    "🎉 PARABÉNS!<br><br><span>"+produtosCompleto[indice]+"</span>";
-
-    overlay.style.display="flex";
 }
 
 function fecharResultado(){
-    overlay.style.display="none";
+overlay.style.display="none";
 }
 
 function easeOut(t){
-    return 1-Math.pow(1-t,3);
+return 1-Math.pow(1-t,3);
 }
 
 desenharRoleta();
+
 </script>
 
 </body>
