@@ -177,8 +177,6 @@ const cores=[
 "#3f51b5"
 ];
 
-/* PROBABILIDADES */
-
 const pesos=[
 15,
 10,
@@ -247,8 +245,6 @@ if(girando)return;
 
 girando=true;
 
-/* TOCA SOM DA ROLETA */
-
 somRoleta.currentTime=0;
 somRoleta.play();
 
@@ -265,7 +261,7 @@ const destino=360-(premio*anguloSetor+offset)+90;
 const voltas=360*5;
 const rotacaoFinal=voltas+destino;
 
-const tempo=4000;
+const tempo=3000;
 const inicio=performance.now();
 
 function animar(agora){
@@ -274,7 +270,7 @@ const progresso=(agora-inicio)/tempo;
 
 if(progresso<1){
 
-anguloAtual=rotacaoFinal*easeOut(progresso);
+anguloAtual=rotacaoFinal*easeOutExpo(progresso);
 desenharComRotacao();
 requestAnimationFrame(animar);
 
@@ -283,12 +279,7 @@ requestAnimationFrame(animar);
 anguloAtual=rotacaoFinal;
 girando=false;
 
-/* PARA SOM DA ROLETA */
-
 somRoleta.pause();
-
-/* SOM DE VITÓRIA */
-
 somVitoria.play();
 
 mostrarResultado(premio);
@@ -329,8 +320,8 @@ function fecharResultado(){
 overlay.style.display="none";
 }
 
-function easeOut(t){
-return 1-Math.pow(1-t,3);
+function easeOutExpo(t){
+return t===1?1:1-Math.pow(2,-10*t);
 }
 
 desenharRoleta();
