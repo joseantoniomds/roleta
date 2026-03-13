@@ -6,6 +6,7 @@
 <title>Roleta de Brindes</title>
 
 <style>
+
 *{box-sizing:border-box;}
 
 body{
@@ -45,11 +46,6 @@ align-items:center;
 cursor:pointer;
 z-index:20;
 box-shadow:0 6px 25px rgba(0,0,0,0.15);
-transition:transform .2s;
-}
-
-#centro:hover{
-transform:translate(-50%,-50%) scale(1.05);
 }
 
 #seta{
@@ -104,6 +100,7 @@ font-size:22px;
 from{transform:scale(.7);opacity:0;}
 to{transform:scale(1);opacity:1;}
 }
+
 </style>
 </head>
 
@@ -129,17 +126,17 @@ to{transform:scale(1);opacity:1;}
 
 const canvas=document.getElementById("roleta");
 const ctx=canvas.getContext("2d");
+
 const overlay=document.getElementById("overlay");
 const resultadoBox=document.getElementById("resultadoBox");
-
-/* SONS */
 
 const somRoleta = new Audio("roleta.mp3");
 somRoleta.loop=true;
 
 const somVitoria = new Audio("vitoria.mp3");
+const somTick = new Audio("tick.mp3");
 
-/* PRÊMIOS */
+/* TEXTOS */
 
 const produtosCurto=[
 "10% GERAL",
@@ -165,6 +162,8 @@ const produtosCompleto=[
 "BRINDE PERSONALIZADO"
 ];
 
+/* CORES */
+
 const cores=[
 "#1f3c88",
 "#2962ff",
@@ -177,20 +176,25 @@ const cores=[
 "#3f51b5"
 ];
 
+/* PROBABILIDADE */
+
 const pesos=[
-15,
-10,
-2,
+18,
+12,
+3,
 30,
-8,
+7,
 5,
 4,
 1,
-25
+20
 ];
 
 let anguloAtual=0;
 let girando=false;
+let ultimoTick=-1;
+
+/* ESCOLHER PRÊMIO */
 
 function escolherPremio(){
 
@@ -209,6 +213,8 @@ return 0;
 
 }
 
+/* DESENHAR ROLETA */
+
 function desenharRoleta(){
 
 const total=produtosCurto.length;
@@ -226,10 +232,10 @@ ctx.save();
 ctx.translate(250,250);
 ctx.rotate(i*angulo+angulo/2);
 
-ctx.textAlign="center";
-ctx.textBaseline="middle";
 ctx.fillStyle="#fff";
 ctx.font="bold 16px Arial";
+ctx.textAlign="center";
+ctx.textBaseline="middle";
 
 ctx.fillText(produtosCurto[i],170,0);
 
@@ -239,9 +245,11 @@ ctx.restore();
 
 }
 
+/* GIRAR ROLETA */
+
 function girar(){
 
-if(girando)return;
+if(girando) return;
 
 girando=true;
 
@@ -253,7 +261,9 @@ const premio=escolherPremio();
 const total=produtosCurto.length;
 const anguloSetor=360/total;
 
-const margem=2;
+/* posição aleatória dentro da fatia */
+
+const margem=1;
 const offset=margem+Math.random()*(anguloSetor-(margem*2));
 
 const destino=360-(premio*anguloSetor+offset)+90;
@@ -271,16 +281,35 @@ const progresso=(agora-inicio)/tempo;
 if(progresso<1){
 
 anguloAtual=rotacaoFinal*easeOutExpo(progresso);
+
+/* TICK NAS FATIAS */
+
+let setorAtual=Math.floor((anguloAtual%360)/anguloSetor);
+
+if(setorAtual!==ultimoTick){
+
+somTick.currentTime=0;
+somTick.play();
+
+ultimoTick=setorAtual;
+
+}
+
 desenharComRotacao();
+
 requestAnimationFrame(animar);
 
 }else{
 
 anguloAtual=rotacaoFinal;
-girando=false;
 
 somRoleta.pause();
+
+somVitoria.pause();
+somVitoria.currentTime=0;
 somVitoria.play();
+
+girando=false;
 
 mostrarResultado(premio);
 
@@ -292,11 +321,14 @@ requestAnimationFrame(animar);
 
 }
 
+/* DESENHAR COM ROTAÇÃO */
+
 function desenharComRotacao(){
 
 ctx.clearRect(0,0,500,500);
 
 ctx.save();
+
 ctx.translate(250,250);
 ctx.rotate(anguloAtual*Math.PI/180);
 ctx.translate(-250,-250);
@@ -306,6 +338,8 @@ desenharRoleta();
 ctx.restore();
 
 }
+
+/* RESULTADO */
 
 function mostrarResultado(indice){
 
@@ -320,8 +354,10 @@ function fecharResultado(){
 overlay.style.display="none";
 }
 
+/* DESACELERAÇÃO REALISTA */
+
 function easeOutExpo(t){
-return t===1?1:1-Math.pow(2,-10*t);
+return t===1 ? 1 : 1 - Math.pow(2,-10*t);
 }
 
 desenharRoleta();
